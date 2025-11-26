@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, type FC } from 'react';
 import {
   CartesianGrid,
   Line,
@@ -8,19 +8,22 @@ import {
   XAxis,
   YAxis,
   Legend,
+  type TooltipProps,
 } from 'recharts';
 import { format, parseISO } from 'date-fns';
 
 import type { ExperimentData, Variation } from '../shared/types';
+import { TrophyIcon } from '../shared/icons/TrophyIcon';
+import { CalendarIcon } from '../shared/icons/CalendarIcon';
 import styles from './ExperimentChart.module.css';
+import tooltipStyles from './ExperimentTooltip.module.css';
 
 type ExperimentChartProps = {
   data: ExperimentData;
 };
 
 type ChartPoint = {
-  monthIndex: number;
-  monthLabel: string;
+  date: string;
   [variationKey: string]: string | number;
 };
 
@@ -36,6 +39,81 @@ const DEFAULT_KEY_BY_NAME: Record<string, string> = {
   Original: '0',
 };
 
+type CustomTooltipProps = TooltipProps<number, string> & {
+  payload?: Array<{
+    value?: number;
+    dataKey?: string | number;
+    name?: string;
+    color?: string;
+    payload?: ChartPoint;
+  }>;
+};
+
+const CustomTooltip: FC<CustomTooltipProps> = (props) => {
+  const { active, payload } = props;
+  if (!active || !payload || payload.length === 0) {
+    return null;
+  }
+
+  const rawDate = (payload[0].payload as ChartPoint | undefined)?.date as string | undefined;
+
+  let dateLabel = rawDate;
+  if (rawDate) {
+    try {
+      dateLabel = format(parseISO(rawDate), 'dd/MM/yyyy');
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  const rows = payload
+    .filter((item: { value?: number }) => typeof item.value === 'number')
+    .map((item: { value?: number; dataKey?: string | number; name?: string; color?: string }) => ({
+      key: String(item.dataKey ?? ''),
+      name: String(item.name ?? ''),
+      value: Number(item.value ?? 0),
+      color: item.color || '#000',
+    }))
+    .sort((a: { value: number }, b: { value: number }) => b.value - a.value);
+
+  if (rows.length === 0) {
+    return null;
+  }
+
+  const bestKey = rows[0].key;
+
+  const formatPercent = (value: number) => {
+    const fixed = value.toFixed(2);
+    return fixed.replace('.', ',') + '%';
+  };
+
+  return (
+    <div className={tooltipStyles.tooltip}>
+      <div className={tooltipStyles.header}>
+        <CalendarIcon />
+        <span>{dateLabel}</span>
+      </div>
+      <div className={tooltipStyles.divider} />
+      <div className={tooltipStyles.rows}>
+        {rows.map((row: { key: string; name: string; value: number; color: string }) => (
+          <div key={row.key} className={tooltipStyles.row}>
+            <div className={tooltipStyles.rowLeft}>
+              <span className={tooltipStyles.dot} style={{ backgroundColor: row.color }} />
+              <span className={tooltipStyles.name}>{row.name}</span>
+              {row.key === bestKey && (
+                <span className={tooltipStyles.trophy}>
+                  <TrophyIcon />
+                </span>
+              )}
+            </div>
+            <span className={tooltipStyles.value}>{formatPercent(row.value)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 export function ExperimentChart({ data }: ExperimentChartProps) {
   const normalizedVariations = useMemo(
     () =>
@@ -47,57 +125,54 @@ export function ExperimentChart({ data }: ExperimentChartProps) {
   );
 
   const chartData = useMemo<ChartPoint[]>(() => {
-    const monthlyTotals: Record<
-      number,
-      { visits: Record<string, number>; conversions: Record<string, number> }
-    > = {};
-
-    data.data.forEach((day) => {
-      const monthIndex = parseISO(day.date).getMonth() + 1;
-      if (!monthlyTotals[monthIndex]) {
-        monthlyTotals[monthIndex] = { visits: {}, conversions: {} };
-      }
-
-      const bucket = monthlyTotals[monthIndex];
-
-      Object.entries(day.visits).forEach(([variationKey, value]) => {
-        if (typeof value === 'number') {
-          bucket.visits[variationKey] = (bucket.visits[variationKey] ?? 0) + value;
-        }
-      });
-
-      Object.entries(day.conversions).forEach(([variationKey, value]) => {
-        if (typeof value === 'number') {
-          bucket.conversions[variationKey] = (bucket.conversions[variationKey] ?? 0) + value;
-        }
-      });
-    });
-
-    const points: ChartPoint[] = [];
-
-    for (let monthIndex = 1; monthIndex <= 12; monthIndex += 1) {
-      const totals = monthlyTotals[monthIndex];
+    return data.data.map((day) => {
       const point: ChartPoint = {
-        monthIndex,
-        monthLabel: format(new Date(2000, monthIndex - 1, 1), 'MMM'),
+        date: day.date,
       };
 
       normalizedVariations.forEach((variation: Variation & { key: string }) => {
         const key = variation.key;
-        const visits = totals?.visits[key];
-        const conversions = totals?.conversions[key];
+
+        const visits = day.visits[key];
+        const conversions = day.conversions[key];
+
         const conversionRate =
           typeof visits === 'number' && visits > 0 && typeof conversions === 'number'
             ? Number(((conversions / visits) * 100).toFixed(2))
             : 0;
+
         point[key] = conversionRate;
       });
 
-      points.push(point);
-    }
-
-    return points;
+      return point;
+    });
   }, [data.data, normalizedVariations]);
+
+  const monthTicks = useMemo(() => {
+    if (!chartData || chartData.length === 0) return [];
+
+    const seen = new Set<string>();
+    const ticks: string[] = [];
+
+    chartData.forEach((point) => {
+      const rawDate = point.date;
+      if (!rawDate) return;
+
+      try {
+        const d = parseISO(rawDate);
+        const monthKey = format(d, 'yyyy-MM');
+
+        if (!seen.has(monthKey)) {
+          seen.add(monthKey);
+          ticks.push(rawDate);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    });
+
+    return ticks;
+  }, [chartData]);
 
   const lineConfig = useMemo(
     () =>
@@ -117,7 +192,15 @@ export function ExperimentChart({ data }: ExperimentChartProps) {
         <LineChart data={chartData} margin={{ top: 16, right: 24, left: 8, bottom: 0 }}>
           <CartesianGrid stroke="#e1dfe7" vertical horizontal />
           <XAxis
-            dataKey="monthLabel"
+            dataKey="date"
+            ticks={monthTicks}
+            tickFormatter={(value: string) => {
+              try {
+                return format(parseISO(value), 'MMM');
+              } catch {
+                return value;
+              }
+            }}
             tickLine={false}
             axisLine={{ stroke: '#e1dfe7' }}
             tick={{ fill: '#918f9a', fontSize: 12 }}
@@ -130,7 +213,7 @@ export function ExperimentChart({ data }: ExperimentChartProps) {
             axisLine={{ stroke: '#e1dfe7' }}
             tick={{ fill: '#918f9a', fontSize: 12 }}
           />
-          <Tooltip />
+          <Tooltip content={<CustomTooltip />} />
           <Legend verticalAlign="top" height={36} wrapperStyle={{ paddingBottom: 12 }} />
           {lineConfig.map((config) => (
             <Line

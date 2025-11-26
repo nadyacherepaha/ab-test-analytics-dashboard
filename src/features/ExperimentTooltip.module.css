@@ -1,0 +1,71 @@
+.tooltip {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 12px 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border: 1px solid #e1dfe7;
+  min-width: 220px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #46464f;
+}
+
+.calendarIcon {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background-color: #46464f;
+}
+
+.divider {
+  height: 1px;
+  background: #e1dfe7;
+  margin: 8px 0;
+}
+
+.rows {
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 13px;
+  color: #46464f;
+}
+
+.rowLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.name {
+  white-space: nowrap;
+}
+
+.value {
+  font-variant-numeric: tabular-nums;
+}
+
+.trophy {
+  margin-left: 4px;
+  font-size: 12px;
+}
