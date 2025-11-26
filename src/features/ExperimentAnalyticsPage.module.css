@@ -1,0 +1,13 @@
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.stats {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.25rem;
+  color: #3c3c45;
+}
+
