@@ -1,7 +1,13 @@
 .container {
-  max-width: 720px;
+  width: 100%;
+  max-width: 700px;
   margin: 0 auto;
-  padding: 2rem 1.5rem;
+}
+
+@media (min-width: 1300px) {
+  .container {
+    max-width: 1300px;
+  }
 }
 
 .stats {
@@ -10,4 +16,3 @@
   gap: 0.25rem;
   color: #3c3c45;
 }
-

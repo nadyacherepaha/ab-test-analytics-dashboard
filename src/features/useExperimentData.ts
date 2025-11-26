@@ -51,4 +51,3 @@ export function useExperimentData(): UseExperimentDataResult {
 
   return { data, loading, error };
 }
-

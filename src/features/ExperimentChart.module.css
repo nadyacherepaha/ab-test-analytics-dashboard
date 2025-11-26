@@ -1,0 +1,79 @@
+.chartContainer {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 4px;
+  border: 1px solid #e1dfe7;
+  box-shadow: 0 8px 32px rgba(10, 2, 47, 0.04);
+}
+
+.tooltip {
+  min-width: 220px;
+  max-height: 260px;
+  padding: 12px 16px;
+  border-radius: 6px;
+  background: #ffffff;
+  border: 1px solid #e1dfe7;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+  overflow-y: auto;
+}
+
+.tooltipHeader {
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #52515b;
+  border-bottom: 1px solid #e1dfe7;
+  padding-bottom: 4px;
+}
+
+.tooltipBody {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tooltipDayRow {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 11px;
+  color: #52515b;
+}
+
+.tooltipDayLabel {
+  flex: 0 0 auto;
+  color: #918f9a;
+}
+
+.tooltipDayValues {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tooltipLine {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tooltipLegend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tooltipDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+
+.tooltipName {
+  white-space: nowrap;
+}
+
+.tooltipValue {
+  font-weight: 600;
+}

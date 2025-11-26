@@ -13,4 +13,3 @@ export type ExperimentData = {
   variations: Variation[];
   data: DailyMetrics[];
 };
-

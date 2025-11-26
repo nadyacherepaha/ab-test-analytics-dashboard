@@ -1,4 +1,5 @@
 import styles from './ExperimentAnalyticsPage.module.css';
+import { ExperimentChart } from './ExperimentChart';
 import { useExperimentData } from './useExperimentData';
 
 export function ExperimentAnalyticsPage() {
@@ -10,12 +11,14 @@ export function ExperimentAnalyticsPage() {
       {loading && <p>Loading...</p>}
       {error && <p>Error: {error}</p>}
       {data && (
-        <div className={styles.stats}>
-          <p>Variations: {data.variations.length}</p>
-          <p>Days: {data.data.length}</p>
-        </div>
+        <>
+          <div className={styles.stats}>
+            <p>Variations: {data.variations.length}</p>
+            <p>Days: {data.data.length}</p>
+          </div>
+          <ExperimentChart data={data} />
+        </>
       )}
     </div>
   );
 }
-
