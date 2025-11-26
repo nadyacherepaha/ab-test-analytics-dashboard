@@ -23,11 +23,16 @@ type ExperimentChartProps = {
   data: ExperimentData;
   normalizedVariations: NormalizedVariation[];
   activeVariationKeys: string[];
+  mode: 'day' | 'week';
 };
 
 type ChartPoint = {
   date: string;
-  [variationKey: string]: string | number;
+  weekRange?: string;
+  weekLabel?: string;
+  monthRange?: string;
+  monthLabel?: string;
+  [variationKey: string]: string | number | undefined;
 };
 
 const BASE_LINE_CONFIG = [
@@ -51,23 +56,30 @@ type CustomTooltipProps = TooltipProps<number, string> & {
     color?: string;
     payload?: ChartPoint;
   }>;
+  mode?: 'day' | 'week';
 };
 
 const CustomTooltip: FC<CustomTooltipProps> = (props) => {
-  const { active, payload } = props;
+  const { active, payload, mode = 'day' } = props;
   if (!active || !payload || payload.length === 0) {
     return null;
   }
 
   const rawDate = (payload[0].payload as ChartPoint | undefined)?.date as string | undefined;
+  const point = payload[0].payload as ChartPoint | undefined;
 
-  let dateLabel = rawDate;
-  if (rawDate) {
+  let dateLabel = '';
+  if (mode === 'day' && rawDate) {
     try {
       dateLabel = format(parseISO(rawDate), 'dd/MM/yyyy');
     } catch (error) {
       console.error(error);
     }
+  }
+  if (mode === 'week' && point) {
+    const weekLabel = point.weekLabel || '';
+    const weekRange = point.weekRange || '';
+    dateLabel = `W ${weekLabel} (${weekRange})`;
   }
 
   const rows = payload
@@ -97,19 +109,23 @@ const CustomTooltip: FC<CustomTooltipProps> = (props) => {
         <CalendarIcon />
         <span>{dateLabel}</span>
       </div>
+
       <div className={tooltipStyles.divider} />
+
       <div className={tooltipStyles.rows}>
         {rows.map((row: { key: string; name: string; value: number; color: string }) => (
           <div key={row.key} className={tooltipStyles.row}>
             <div className={tooltipStyles.rowLeft}>
               <span className={tooltipStyles.dot} style={{ backgroundColor: row.color }} />
               <span className={tooltipStyles.name}>{row.name}</span>
+
               {row.key === bestKey && (
                 <span className={tooltipStyles.trophy}>
                   <TrophyIcon />
                 </span>
               )}
             </div>
+
             <span className={tooltipStyles.value}>{formatPercent(row.value)}</span>
           </div>
         ))}
@@ -122,29 +138,169 @@ export function ExperimentChart({
   data,
   normalizedVariations,
   activeVariationKeys,
+  mode,
 }: ExperimentChartProps) {
   const chartData = useMemo<ChartPoint[]>(() => {
-    return data.data.map((day) => {
+    if (mode === 'day') {
+      return data.data.map((day) => {
+        const point: ChartPoint = {
+          date: day.date,
+        };
+
+        normalizedVariations.forEach((variation) => {
+          const key = variation.key;
+          const visits = day.visits[key];
+          const conversions = day.conversions[key];
+
+          const rate =
+            typeof visits === 'number' && visits > 0 && typeof conversions === 'number'
+              ? (conversions / visits) * 100
+              : 0;
+
+          point[key] = Number(rate.toFixed(2));
+        });
+
+        return point;
+      });
+    }
+
+    if (mode === 'week') {
+      const buckets: Record<
+        string,
+        {
+          visits: Record<string, number>;
+          conversions: Record<string, number>;
+          startDate: string;
+          endDate: string;
+        }
+      > = {};
+
+      data.data.forEach((day) => {
+        const d = parseISO(day.date);
+        const weekKey = `${format(d, 'yyyy')}-W${format(d, 'II')}`;
+
+        if (!buckets[weekKey]) {
+          buckets[weekKey] = {
+            visits: {},
+            conversions: {},
+            startDate: day.date,
+            endDate: day.date,
+          };
+        }
+
+        buckets[weekKey].endDate = day.date;
+
+        Object.entries(day.visits).forEach(([variationKey, value]) => {
+          if (!buckets[weekKey].visits[variationKey]) {
+            buckets[weekKey].visits[variationKey] = 0;
+          }
+          if (typeof value === 'number') {
+            buckets[weekKey].visits[variationKey] += value;
+          }
+        });
+
+        Object.entries(day.conversions).forEach(([variationKey, value]) => {
+          if (!buckets[weekKey].conversions[variationKey]) {
+            buckets[weekKey].conversions[variationKey] = 0;
+          }
+          if (typeof value === 'number') {
+            buckets[weekKey].conversions[variationKey] += value;
+          }
+        });
+      });
+
+      return Object.entries(buckets).map(([weekKey, bucket]) => {
+        const weekNumber = weekKey.split('-W')[1];
+        const point: ChartPoint = {
+          date: bucket.startDate,
+          weekRange: `${format(parseISO(bucket.startDate), 'dd/MM')} - ${format(parseISO(bucket.endDate), 'dd/MM')}`,
+          weekLabel: weekNumber,
+        };
+
+        normalizedVariations.forEach((variation) => {
+          const key = variation.key;
+          const visits = bucket.visits[key];
+          const conversions = bucket.conversions[key];
+
+          const rate =
+            typeof visits === 'number' && visits > 0 && typeof conversions === 'number'
+              ? (conversions / visits) * 100
+              : 0;
+
+          point[key] = Number(rate.toFixed(2));
+        });
+
+        return point;
+      });
+    }
+
+    const monthBuckets: Record<
+      string,
+      {
+        visits: Record<string, number>;
+        conversions: Record<string, number>;
+        startDate: string;
+        endDate: string;
+      }
+    > = {};
+
+    data.data.forEach((day) => {
+      const d = parseISO(day.date);
+      const monthKey = format(d, 'yyyy-MM');
+
+      if (!monthBuckets[monthKey]) {
+        monthBuckets[monthKey] = {
+          visits: {},
+          conversions: {},
+          startDate: day.date,
+          endDate: day.date,
+        };
+      }
+
+      monthBuckets[monthKey].endDate = day.date;
+
+      Object.entries(day.visits).forEach(([variationKey, value]) => {
+        if (!monthBuckets[monthKey].visits[variationKey]) {
+          monthBuckets[monthKey].visits[variationKey] = 0;
+        }
+        if (typeof value === 'number') {
+          monthBuckets[monthKey].visits[variationKey] += value;
+        }
+      });
+
+      Object.entries(day.conversions).forEach(([variationKey, value]) => {
+        if (!monthBuckets[monthKey].conversions[variationKey]) {
+          monthBuckets[monthKey].conversions[variationKey] = 0;
+        }
+        if (typeof value === 'number') {
+          monthBuckets[monthKey].conversions[variationKey] += value;
+        }
+      });
+    });
+
+    return Object.entries(monthBuckets).map(([, bucket]) => {
       const point: ChartPoint = {
-        date: day.date,
+        date: bucket.startDate,
+        monthRange: `${format(parseISO(bucket.startDate), 'dd/MM')} - ${format(parseISO(bucket.endDate), 'dd/MM')}`,
+        monthLabel: format(parseISO(bucket.startDate), 'MMM yyyy'),
       };
 
       normalizedVariations.forEach((variation) => {
         const key = variation.key;
-        const visits = day.visits[key];
-        const conversions = day.conversions[key];
+        const visits = bucket.visits[key];
+        const conversions = bucket.conversions[key];
 
-        const conversionRate =
+        const rate =
           typeof visits === 'number' && visits > 0 && typeof conversions === 'number'
-            ? Number(((conversions / visits) * 100).toFixed(2))
+            ? (conversions / visits) * 100
             : 0;
 
-        point[key] = conversionRate;
+        point[key] = Number(rate.toFixed(2));
       });
 
       return point;
     });
-  }, [data.data, normalizedVariations]);
+  }, [data.data, normalizedVariations, mode]);
 
   const filteredChartData = useMemo(() => {
     return chartData;
@@ -196,7 +352,9 @@ export function ExperimentChart({
           seen.add(monthKey);
           ticks.push(rawDate);
         }
-      } catch {}
+      } catch (e) {
+        console.log(e);
+      }
     });
 
     return ticks;
@@ -219,6 +377,7 @@ export function ExperimentChart({
       <ResponsiveContainer width="100%" height={320}>
         <LineChart data={filteredChartData} margin={{ left: 0, right: 0, top: 20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e1dfe7" vertical horizontal />
+
           <XAxis
             dataKey="date"
             ticks={monthTicks}
@@ -233,6 +392,7 @@ export function ExperimentChart({
             axisLine={{ stroke: '#e1dfe7' }}
             tick={{ fill: '#918f9a', fontSize: 12 }}
           />
+
           <YAxis
             tickFormatter={(value: number) => `${value}%`}
             domain={[0, yMax]}
@@ -240,7 +400,9 @@ export function ExperimentChart({
             axisLine={{ stroke: '#e1dfe7' }}
             tick={{ fill: '#918f9a', fontSize: 12 }}
           />
-          <Tooltip content={<CustomTooltip />} />
+
+          <Tooltip content={<CustomTooltip mode={mode} />} />
+
           {normalizedVariations
             .filter((v) => activeVariationKeys.includes(v.key))
             .map((variation) => {

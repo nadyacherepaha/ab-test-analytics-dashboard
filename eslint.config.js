@@ -17,6 +17,7 @@ export default defineConfig([
       reactRefresh.configs.vite,
       eslintConfigPrettier,
     ],
+    rules: { 'react-hooks/set-state-in-effect': 'warn' },
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,

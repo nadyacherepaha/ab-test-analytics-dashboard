@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import styles from './ExperimentAnalyticsPage.module.css';
 import { ExperimentChart } from './ExperimentChart';
 import { VariationsSelector } from './VariationsSelector';
+import { ModeSelector } from './ModeSelector';
 import { useExperimentData } from './useExperimentData';
 
 export function ExperimentAnalyticsPage() {
@@ -17,11 +18,12 @@ export function ExperimentAnalyticsPage() {
   );
 
   const [activeVariationKeys, setActiveVariationKeys] = useState<string[]>([]);
+  const [mode, setMode] = useState<'day' | 'week'>('day');
 
   useEffect(() => {
     if (normalizedVariations.length > 0) {
       const allKeys = normalizedVariations.map((v) => v.key);
-      
+
       setActiveVariationKeys((prev) => {
         if (prev.length === 0 || !prev.some((k) => allKeys.includes(k))) {
           return allKeys;
@@ -44,17 +46,26 @@ export function ExperimentAnalyticsPage() {
     <div className={styles.container}>
       {loading && <p>Loading...</p>}
       {error && <p>Error: {error}</p>}
+
       {data && (
         <>
-          <VariationsSelector
-            variations={normalizedVariations}
-            activeKeys={activeVariationKeys}
-            onToggle={setActiveVariationKeys}
-          />
+          <div className={styles.features}>
+            <div className={styles.filters}>
+              <VariationsSelector
+                variations={normalizedVariations}
+                activeKeys={activeVariationKeys}
+                onToggle={setActiveVariationKeys}
+              />
+
+              <ModeSelector mode={mode} onModeChange={setMode} />
+            </div>
+          </div>
+
           <ExperimentChart
             data={data}
             normalizedVariations={normalizedVariations}
             activeVariationKeys={activeVariationKeys}
+            mode={mode}
           />
         </>
       )}

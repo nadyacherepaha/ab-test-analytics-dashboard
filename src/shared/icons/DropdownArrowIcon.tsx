@@ -4,10 +4,7 @@ type DropdownArrowIconProps = SVGProps<SVGSVGElement> & {
   isOpen?: boolean;
 };
 
-export const DropdownArrowIcon: FC<DropdownArrowIconProps> = ({
-  isOpen = false,
-  ...props
-}) => {
+export const DropdownArrowIcon: FC<DropdownArrowIconProps> = ({ isOpen = false, ...props }) => {
   return (
     <svg
       width="14.003"
@@ -29,4 +26,3 @@ export const DropdownArrowIcon: FC<DropdownArrowIconProps> = ({
     </svg>
   );
 };
-

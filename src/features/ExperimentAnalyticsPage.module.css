@@ -10,6 +10,17 @@
   }
 }
 
+.filters {
+  display: flex;
+}
+
+.features {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .stats {
   margin-top: 1rem;
   display: grid;

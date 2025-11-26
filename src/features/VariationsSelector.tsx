@@ -72,8 +72,10 @@ export const VariationsSelector: FC<VariationsSelectorProps> = ({
         aria-haspopup="listbox"
       >
         <span>{getButtonText()}</span>
+
         <DropdownArrowIcon isOpen={isOpen} className={styles.arrow} />
       </button>
+
       {isOpen && (
         <div className={styles.dropdown}>
           {variations.map((variation) => (
