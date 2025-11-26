@@ -7,7 +7,6 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-  Legend,
   type TooltipProps,
 } from 'recharts';
 import { format, parseISO } from 'date-fns';
@@ -18,8 +17,12 @@ import { CalendarIcon } from '../shared/icons/CalendarIcon';
 import styles from './ExperimentChart.module.css';
 import tooltipStyles from './ExperimentTooltip.module.css';
 
+type NormalizedVariation = Variation & { key: string };
+
 type ExperimentChartProps = {
   data: ExperimentData;
+  normalizedVariations: NormalizedVariation[];
+  activeVariationKeys: string[];
 };
 
 type ChartPoint = {
@@ -28,6 +31,7 @@ type ChartPoint = {
 };
 
 const BASE_LINE_CONFIG = [
+  { name: 'Variation C', color: '#35bdad' },
   { name: 'Variation B', color: '#ff8346' },
   { name: 'Variation A', color: '#4142ef' },
   { name: 'Original', color: '#46464f' },
@@ -114,25 +118,19 @@ const CustomTooltip: FC<CustomTooltipProps> = (props) => {
   );
 };
 
-export function ExperimentChart({ data }: ExperimentChartProps) {
-  const normalizedVariations = useMemo(
-    () =>
-      data.variations.map((variation) => ({
-        ...variation,
-        key: String(variation.id ?? 0),
-      })),
-    [data.variations]
-  );
-
+export function ExperimentChart({
+  data,
+  normalizedVariations,
+  activeVariationKeys,
+}: ExperimentChartProps) {
   const chartData = useMemo<ChartPoint[]>(() => {
     return data.data.map((day) => {
       const point: ChartPoint = {
         date: day.date,
       };
 
-      normalizedVariations.forEach((variation: Variation & { key: string }) => {
+      normalizedVariations.forEach((variation) => {
         const key = variation.key;
-
         const visits = day.visits[key];
         const conversions = day.conversions[key];
 
@@ -148,13 +146,45 @@ export function ExperimentChart({ data }: ExperimentChartProps) {
     });
   }, [data.data, normalizedVariations]);
 
+  const filteredChartData = useMemo(() => {
+    return chartData;
+  }, [chartData]);
+
+  const yMax = useMemo(() => {
+    const values: number[] = [];
+
+    filteredChartData.forEach((point) => {
+      activeVariationKeys.forEach((key) => {
+        const val = point[key];
+        if (typeof val === 'number') {
+          values.push(val);
+        }
+      });
+    });
+
+    if (values.length === 0) {
+      return 40;
+    }
+
+    const rawMax = Math.max(...values);
+    const roundedMax = Math.ceil(rawMax / 5) * 5;
+    return roundedMax || 5;
+  }, [filteredChartData, activeVariationKeys]);
+
   const monthTicks = useMemo(() => {
-    if (!chartData || chartData.length === 0) return [];
+    if (!filteredChartData || filteredChartData.length === 0) return [];
 
     const seen = new Set<string>();
     const ticks: string[] = [];
 
-    chartData.forEach((point) => {
+    filteredChartData.forEach((point) => {
+      const hasActiveValue = activeVariationKeys.some((key) => {
+        const val = point[key];
+        return typeof val === 'number' && val !== 0;
+      });
+
+      if (!hasActiveValue) return;
+
       const rawDate = point.date;
       if (!rawDate) return;
 
@@ -166,13 +196,11 @@ export function ExperimentChart({ data }: ExperimentChartProps) {
           seen.add(monthKey);
           ticks.push(rawDate);
         }
-      } catch (error) {
-        console.error(error);
-      }
+      } catch {}
     });
 
     return ticks;
-  }, [chartData]);
+  }, [filteredChartData, activeVariationKeys]);
 
   const lineConfig = useMemo(
     () =>
@@ -189,8 +217,8 @@ export function ExperimentChart({ data }: ExperimentChartProps) {
   return (
     <div className={styles.chartContainer}>
       <ResponsiveContainer width="100%" height={320}>
-        <LineChart data={chartData} margin={{ top: 16, right: 24, left: 8, bottom: 0 }}>
-          <CartesianGrid stroke="#e1dfe7" vertical horizontal />
+        <LineChart data={filteredChartData} margin={{ left: 0, right: 0, top: 20 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e1dfe7" vertical horizontal />
           <XAxis
             dataKey="date"
             ticks={monthTicks}
@@ -207,25 +235,32 @@ export function ExperimentChart({ data }: ExperimentChartProps) {
           />
           <YAxis
             tickFormatter={(value: number) => `${value}%`}
-            domain={[0, 40]}
-            ticks={[0, 10, 20, 30, 40]}
+            domain={[0, yMax]}
             tickLine={false}
             axisLine={{ stroke: '#e1dfe7' }}
             tick={{ fill: '#918f9a', fontSize: 12 }}
           />
           <Tooltip content={<CustomTooltip />} />
-          <Legend verticalAlign="top" height={36} wrapperStyle={{ paddingBottom: 12 }} />
-          {lineConfig.map((config) => (
-            <Line
-              key={config.key}
-              type="monotone"
-              dataKey={config.key}
-              stroke={config.color}
-              strokeWidth={2}
-              dot={false}
-              name={config.name}
-            />
-          ))}
+          {normalizedVariations
+            .filter((v) => activeVariationKeys.includes(v.key))
+            .map((variation) => {
+              const config = lineConfig.find((c) => c.key === variation.key);
+              const baseConfig = BASE_LINE_CONFIG.find((c) => c.name === variation.name);
+              const color = config?.color ?? baseConfig?.color ?? '#000';
+              const name = variation.name;
+
+              return (
+                <Line
+                  key={variation.key}
+                  type="monotone"
+                  dataKey={variation.key}
+                  stroke={color}
+                  strokeWidth={2}
+                  dot={false}
+                  name={name}
+                />
+              );
+            })}
         </LineChart>
       </ResponsiveContainer>
     </div>
