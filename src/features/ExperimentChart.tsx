@@ -27,12 +27,12 @@ type ExperimentChartProps = {
   activeVariationKeys: string[];
   mode: 'day' | 'week';
   lineStyle: 'line' | 'smooth' | 'area';
+  zoomFactor: number;
 };
 
 type ChartPoint = {
   date: string;
   weekRange?: string;
-  weekLabel?: string;
   monthRange?: string;
   monthLabel?: string;
   [variationKey: string]: string | number | undefined;
@@ -80,9 +80,8 @@ const CustomTooltip: FC<CustomTooltipProps> = (props) => {
     }
   }
   if (mode === 'week' && point) {
-    const weekLabel = point.weekLabel || '';
     const weekRange = point.weekRange || '';
-    dateLabel = `W ${weekLabel} (${weekRange})`;
+    dateLabel = `${weekRange}`;
   }
 
   const rows = payload
@@ -143,6 +142,7 @@ export function ExperimentChart({
   activeVariationKeys,
   mode,
   lineStyle,
+  zoomFactor,
 }: ExperimentChartProps) {
   const chartData = useMemo<ChartPoint[]>(() => {
     if (mode === 'day') {
@@ -213,12 +213,10 @@ export function ExperimentChart({
         });
       });
 
-      return Object.entries(buckets).map(([weekKey, bucket]) => {
-        const weekNumber = weekKey.split('-W')[1];
+      return Object.entries(buckets).map(([, bucket]) => {
         const point: ChartPoint = {
           date: bucket.startDate,
-          weekRange: `${format(parseISO(bucket.startDate), 'dd/MM')} - ${format(parseISO(bucket.endDate), 'dd/MM')}`,
-          weekLabel: weekNumber,
+          weekRange: `${format(parseISO(bucket.startDate), 'dd/MM/yyyy')} - ${format(parseISO(bucket.endDate), 'dd/MM/yyyy')}`,
         };
 
         normalizedVariations.forEach((variation) => {
@@ -310,10 +308,30 @@ export function ExperimentChart({
     return chartData;
   }, [chartData]);
 
+  const zoomedData = useMemo(() => {
+    if (zoomFactor >= 1.0 || filteredChartData.length === 0) {
+      return filteredChartData;
+    }
+
+    const totalPoints = filteredChartData.length;
+    const visibleCount = Math.max(1, Math.floor(totalPoints * zoomFactor));
+
+    const center = Math.floor(totalPoints / 2);
+    const halfCount = Math.floor(visibleCount / 2);
+    let startIndex = Math.max(0, center - halfCount);
+    const endIndex = Math.min(totalPoints - 1, startIndex + visibleCount - 1);
+
+    if (endIndex === totalPoints - 1) {
+      startIndex = Math.max(0, endIndex - visibleCount + 1);
+    }
+
+    return filteredChartData.slice(startIndex, endIndex + 1);
+  }, [filteredChartData, zoomFactor]);
+
   const yMax = useMemo(() => {
     const values: number[] = [];
 
-    filteredChartData.forEach((point) => {
+    zoomedData.forEach((point) => {
       activeVariationKeys.forEach((key) => {
         const val = point[key];
         if (typeof val === 'number') {
@@ -329,15 +347,15 @@ export function ExperimentChart({
     const rawMax = Math.max(...values);
     const roundedMax = Math.ceil(rawMax / 5) * 5;
     return roundedMax || 5;
-  }, [filteredChartData, activeVariationKeys]);
+  }, [zoomedData, activeVariationKeys]);
 
   const monthTicks = useMemo(() => {
-    if (!filteredChartData || filteredChartData.length === 0) return [];
+    if (!zoomedData || zoomedData.length === 0) return [];
 
     const seen = new Set<string>();
     const ticks: string[] = [];
 
-    filteredChartData.forEach((point) => {
+    zoomedData.forEach((point) => {
       const hasActiveValue = activeVariationKeys.some((key) => {
         const val = point[key];
         return typeof val === 'number' && val !== 0;
@@ -362,7 +380,7 @@ export function ExperimentChart({
     });
 
     return ticks;
-  }, [filteredChartData, activeVariationKeys]);
+  }, [zoomedData, activeVariationKeys]);
 
   const lineConfig = useMemo(
     () =>
@@ -381,7 +399,7 @@ export function ExperimentChart({
   return (
     <div className={styles.chartContainer}>
       <ResponsiveContainer width="100%" height={320}>
-        <ChartComponent data={filteredChartData} margin={{ left: 0, right: 0, top: 20 }}>
+        <ChartComponent data={zoomedData} margin={{ left: 0, right: 0, top: 20, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e1dfe7" vertical horizontal />
 
           <XAxis

@@ -4,6 +4,7 @@ import { ExperimentChart } from './ExperimentChart';
 import { VariationsSelector } from './VariationsSelector';
 import { ModeSelector } from './ModeSelector';
 import { LineStyleSelector } from './LineStyleSelector';
+import { ZoomControls } from './ZoomControls';
 import { useExperimentData } from './useExperimentData';
 
 export function ExperimentAnalyticsPage() {
@@ -21,6 +22,20 @@ export function ExperimentAnalyticsPage() {
   const [activeVariationKeys, setActiveVariationKeys] = useState<string[]>([]);
   const [mode, setMode] = useState<'day' | 'week'>('day');
   const [lineStyle, setLineStyle] = useState<'line' | 'smooth' | 'area'>('smooth');
+  const [resetZoomCounter, setResetZoomCounter] = useState(0);
+  const [zoomFactor, setZoomFactor] = useState<number>(1.0);
+
+  useEffect(() => {
+    setZoomFactor(1.0);
+  }, [resetZoomCounter]);
+
+  const handleZoomIn = () => {
+    setZoomFactor((prev) => Math.max(0.1, prev * 0.7));
+  };
+
+  const handleZoomOut = () => {
+    setZoomFactor((prev) => Math.min(1.0, prev / 0.7));
+  };
 
   useEffect(() => {
     if (normalizedVariations.length > 0) {
@@ -62,7 +77,15 @@ export function ExperimentAnalyticsPage() {
               <ModeSelector mode={mode} onModeChange={setMode} />
             </div>
 
-            <LineStyleSelector value={lineStyle} onChange={setLineStyle} />
+            <div className={styles.rightControls}>
+              <LineStyleSelector value={lineStyle} onChange={setLineStyle} />
+
+              <ZoomControls
+                onZoomIn={handleZoomIn}
+                onZoomOut={handleZoomOut}
+                onReset={() => setResetZoomCounter((x) => x + 1)}
+              />
+            </div>
           </div>
 
           <ExperimentChart
@@ -71,6 +94,7 @@ export function ExperimentAnalyticsPage() {
             activeVariationKeys={activeVariationKeys}
             mode={mode}
             lineStyle={lineStyle}
+            zoomFactor={zoomFactor}
           />
         </>
       )}

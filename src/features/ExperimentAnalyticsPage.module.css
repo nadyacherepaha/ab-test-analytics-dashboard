@@ -16,7 +16,7 @@
 
 .features {
   display: flex;
-  gap: 1rem;
+  gap: 12px;
   justify-content: space-between;
   align-items: center;
 }
@@ -24,6 +24,12 @@
 .stats {
   margin-top: 1rem;
   display: grid;
-  gap: 0.25rem;
+  gap: 4px;
   color: #3c3c45;
+}
+
+.rightControls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
