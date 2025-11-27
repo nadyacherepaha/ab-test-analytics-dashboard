@@ -14,6 +14,15 @@
   display: flex;
 }
 
+.topControls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+}
+
 .features {
   display: flex;
   gap: 12px;
@@ -32,4 +41,40 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
+}
+
+.modeAndStyle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.themeToggle {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 2px;
+  background: var(--card-border-color);
+}
+
+.themeButton,
+.themeButtonActive {
+  border: none;
+  padding: 5px;
+  cursor: pointer;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--app-text-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.themeButtonActive {
+  background: var(--card-bg-color);
+}
+
+.themeIcon {
+  width: 20px;
+  height: 20px;
 }

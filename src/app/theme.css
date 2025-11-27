@@ -1,0 +1,39 @@
+:root[data-theme='light'] {
+  --app-bg-color: #fff;
+  --app-text-color: #1b1b23;
+  --card-bg-color: #ffffff;
+  --card-border-color: #e1dfe7;
+  --chart-axis-color: #e1dfe7;
+  --chart-tick-color: #918f9a;
+  --chart-grid-color: #e1dfe7;
+  --tooltip-bg-color: #ffffff;
+  --tooltip-border-color: #e1dfe7;
+  --tooltip-text-color: #46464f;
+  --selector-bg-color: #ffffff;
+  --selector-border-color: #e1dfe7;
+  --selector-text-color: #46464f;
+  --selector-hover-bg-color: #f5f5f7;
+  --selector-active-bg-color: #eceaff;
+  --selector-active-text-color: #4142ef;
+  --reset-icon-color: #5e5d67;
+}
+
+:root[data-theme='dark'] {
+  --app-bg-color: #000027;
+  --app-text-color: #f5f4f8;
+  --card-bg-color: #000027;
+  --card-border-color: #414163;
+  --chart-axis-color: #414163;
+  --chart-tick-color: #918f9a;
+  --chart-grid-color: #414163;
+  --tooltip-bg-color: #000027;
+  --tooltip-border-color: #414163;
+  --tooltip-text-color: #f5f4f8;
+  --selector-bg-color: #000027;
+  --selector-border-color: #414163;
+  --selector-text-color: #f5f4f8;
+  --selector-hover-bg-color: #1c1b2a;
+  --selector-active-bg-color: #2a2938;
+  --selector-active-text-color: #a1a3ff;
+  --reset-icon-color: #ffffff;
+}

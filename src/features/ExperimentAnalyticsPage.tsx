@@ -6,6 +6,8 @@ import { ModeSelector } from './ModeSelector';
 import { LineStyleSelector } from './LineStyleSelector';
 import { ZoomControls } from './ZoomControls';
 import { useExperimentData } from './useExperimentData';
+import { SunIcon } from '../shared/icons/SunIcon';
+import { MoonIcon } from '../shared/icons/MoonIcon';
 
 export function ExperimentAnalyticsPage() {
   const { data, loading, error } = useExperimentData();
@@ -24,6 +26,11 @@ export function ExperimentAnalyticsPage() {
   const [lineStyle, setLineStyle] = useState<'line' | 'smooth' | 'area'>('smooth');
   const [resetZoomCounter, setResetZoomCounter] = useState(0);
   const [zoomFactor, setZoomFactor] = useState<number>(1.0);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   useEffect(() => {
     setZoomFactor(1.0);
@@ -66,7 +73,7 @@ export function ExperimentAnalyticsPage() {
 
       {data && (
         <>
-          <div className={styles.features}>
+          <div className={styles.topControls}>
             <div className={styles.filters}>
               <VariationsSelector
                 variations={normalizedVariations}
@@ -78,13 +85,35 @@ export function ExperimentAnalyticsPage() {
             </div>
 
             <div className={styles.rightControls}>
-              <LineStyleSelector value={lineStyle} onChange={setLineStyle} />
+              <div className={styles.modeAndStyle}>
+                <LineStyleSelector value={lineStyle} onChange={setLineStyle} />
 
-              <ZoomControls
-                onZoomIn={handleZoomIn}
-                onZoomOut={handleZoomOut}
-                onReset={() => setResetZoomCounter((x) => x + 1)}
-              />
+                <ZoomControls
+                  onZoomIn={handleZoomIn}
+                  onZoomOut={handleZoomOut}
+                  onReset={() => setResetZoomCounter((x) => x + 1)}
+                />
+              </div>
+
+              <div className={styles.themeToggle}>
+                <button
+                  type="button"
+                  className={theme === 'light' ? styles.themeButtonActive : styles.themeButton}
+                  onClick={() => setTheme('light')}
+                  aria-label="Light theme"
+                >
+                  <SunIcon className={styles.themeIcon} />
+                </button>
+
+                <button
+                  type="button"
+                  className={theme === 'dark' ? styles.themeButtonActive : styles.themeButton}
+                  onClick={() => setTheme('dark')}
+                  aria-label="Dark theme"
+                >
+                  <MoonIcon className={styles.themeIcon} />
+                </button>
+              </div>
             </div>
           </div>
 

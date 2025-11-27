@@ -9,27 +9,29 @@
   gap: 8px;
   padding: 8px 12px;
   font-size: 13px;
-  color: #46464f;
-  background-color: #ffffff;
-  border: 1px solid #e1dfe7;
+  color: var(--selector-text-color);
+  background-color: var(--selector-bg-color);
+  border: 1px solid var(--selector-border-color);
   border-radius: 4px;
   cursor: pointer;
   transition: border-color 0.2s;
 }
 
 .trigger:hover {
-  border-color: #918f9a;
+  border-color: var(--selector-border-color);
+  background-color: var(--selector-hover-bg-color);
 }
 
 .trigger:focus {
   outline: none;
-  border-color: #4142ef;
+  border-color: var(--selector-active-text-color);
 }
 
 .arrow {
   flex-shrink: 0;
   display: flex;
   align-items: center;
+  color: var(--selector-text-color);
 }
 
 .dropdown {
@@ -38,8 +40,8 @@
   left: 0;
   margin-top: 4px;
   padding: 8px;
-  background-color: #ffffff;
-  border: 1px solid #e1dfe7;
+  background-color: var(--selector-bg-color);
+  border: 1px solid var(--selector-border-color);
   border-radius: 4px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   z-index: 1000;
@@ -53,7 +55,7 @@
   align-items: center;
   padding: 6px 8px;
   font-size: 13px;
-  color: #46464f;
+  color: var(--selector-text-color);
   background-color: transparent;
   border: none;
   border-radius: 4px;
@@ -63,10 +65,10 @@
 }
 
 .option:hover {
-  background-color: #f5f5f7;
+  background-color: var(--selector-hover-bg-color);
 }
 
 .option.active {
-  background-color: #eceaff;
-  color: #4142ef;
+  background-color: var(--selector-active-bg-color);
+  color: var(--selector-active-text-color);
 }

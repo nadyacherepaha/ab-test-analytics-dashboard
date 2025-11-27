@@ -6,10 +6,10 @@
 .container {
   display: flex;
   align-items: center;
-  border: 1px solid #e1dfe7;
+  border: 1px solid var(--selector-border-color);
   border-radius: 4px;
   overflow: hidden;
-  background: white;
+  background: var(--selector-bg-color);
 }
 
 .button {
@@ -18,12 +18,12 @@
   justify-content: center;
   padding: 6px 10px;
   font-size: 20px;
-  color: #46464f;
+  color: var(--selector-text-color);
   background-color: transparent;
   border: none;
   cursor: pointer;
   transition: background-color 0.2s;
-  border-right: 1px solid #e1dfe7;
+  border-right: 1px solid var(--selector-border-color);
 }
 
 .button:last-child {
@@ -31,16 +31,16 @@
 }
 
 .button:hover {
-  background-color: #f5f4f8;
+  background-color: var(--selector-hover-bg-color);
 }
 
 .button:focus {
   outline: none;
-  background-color: #f5f4f8;
+  background-color: var(--selector-hover-bg-color);
 }
 
 .button:active {
-  background-color: #eceaff;
+  background-color: var(--selector-active-bg-color);
 }
 
 .minus,
@@ -74,6 +74,7 @@
 .resetIcon {
   display: flex;
   align-items: center;
-  width: 16px;
-  height: 14px;
+  width: 20px;
+  height: 18px;
+  color: var(--reset-icon-color);
 }

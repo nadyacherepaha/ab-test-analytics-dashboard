@@ -1,4 +1,4 @@
-import { useMemo, type FC } from 'react';
+import { useMemo, useState, useEffect, type FC } from 'react';
 import {
   Area,
   CartesianGrid,
@@ -108,7 +108,7 @@ const CustomTooltip: FC<CustomTooltipProps> = (props) => {
   return (
     <div className={tooltipStyles.tooltip}>
       <div className={tooltipStyles.header}>
-        <CalendarIcon />
+        <CalendarIcon className={tooltipStyles.calendarIcon} />
         <span>{dateLabel}</span>
       </div>
 
@@ -144,6 +144,34 @@ export function ExperimentChart({
   lineStyle,
   zoomFactor,
 }: ExperimentChartProps) {
+  const [themeColors, setThemeColors] = useState({
+    axisColor: '#e1dfe7',
+    tickColor: '#918f9a',
+    gridColor: '#e1dfe7',
+  });
+
+  useEffect(() => {
+    const updateThemeColors = () => {
+      const root = document.documentElement;
+      const computedStyle = getComputedStyle(root);
+      setThemeColors({
+        axisColor: computedStyle.getPropertyValue('--chart-axis-color').trim() || '#e1dfe7',
+        tickColor: computedStyle.getPropertyValue('--chart-tick-color').trim() || '#918f9a',
+        gridColor: computedStyle.getPropertyValue('--chart-grid-color').trim() || '#e1dfe7',
+      });
+    };
+
+    updateThemeColors();
+
+    const observer = new MutationObserver(updateThemeColors);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   const chartData = useMemo<ChartPoint[]>(() => {
     if (mode === 'day') {
       return data.data.map((day) => {
@@ -400,7 +428,7 @@ export function ExperimentChart({
     <div className={styles.chartContainer}>
       <ResponsiveContainer width="100%" height={320}>
         <ChartComponent data={zoomedData} margin={{ left: 0, right: 0, top: 20, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e1dfe7" vertical horizontal />
+          <CartesianGrid strokeDasharray="3 3" stroke={themeColors.gridColor} vertical horizontal />
 
           <XAxis
             dataKey="date"
@@ -413,16 +441,16 @@ export function ExperimentChart({
               }
             }}
             tickLine={false}
-            axisLine={{ stroke: '#e1dfe7' }}
-            tick={{ fill: '#918f9a', fontSize: 12 }}
+            axisLine={{ stroke: themeColors.axisColor }}
+            tick={{ fill: themeColors.tickColor, fontSize: 12 }}
           />
 
           <YAxis
             tickFormatter={(value: number) => `${value}%`}
             domain={[0, yMax]}
             tickLine={false}
-            axisLine={{ stroke: '#e1dfe7' }}
-            tick={{ fill: '#918f9a', fontSize: 12 }}
+            axisLine={{ stroke: themeColors.axisColor }}
+            tick={{ fill: themeColors.tickColor, fontSize: 12 }}
           />
 
           <Tooltip content={<CustomTooltip mode={mode} />} />

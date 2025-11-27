@@ -1,13 +1,12 @@
 .app {
-  min-height: 100vh;
+  height: calc(100vh - 60px);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   margin: 0;
-  padding: 2rem;
-  background: #fff;
-  color: #1b1b23;
+  padding: 30px;
+  background-color: var(--app-bg-color);
+  color: var(--app-text-color);
   text-align: center;
 }
 

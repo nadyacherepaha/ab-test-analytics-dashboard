@@ -9,7 +9,3 @@
     sans-serif;
   background-color: #fff;
 }
-
-:global(#root) {
-  min-height: 100vh;
-}
