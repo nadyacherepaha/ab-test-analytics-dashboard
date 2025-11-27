@@ -1,4 +1,5 @@
-import { useMemo, useState, useEffect, type FC } from 'react';
+import { useMemo, useState, useEffect, useRef, useCallback, type FC } from 'react';
+import html2canvas from 'html2canvas';
 import {
   Area,
   CartesianGrid,
@@ -28,6 +29,7 @@ type ExperimentChartProps = {
   mode: 'day' | 'week';
   lineStyle: 'line' | 'smooth' | 'area';
   zoomFactor: number;
+  onRegisterExport?: (fn: () => void) => void;
 };
 
 type ChartPoint = {
@@ -143,7 +145,9 @@ export function ExperimentChart({
   mode,
   lineStyle,
   zoomFactor,
+  onRegisterExport,
 }: ExperimentChartProps) {
+  const chartRef = useRef<HTMLDivElement | null>(null);
   const [themeColors, setThemeColors] = useState({
     axisColor: '#e1dfe7',
     tickColor: '#918f9a',
@@ -424,8 +428,35 @@ export function ExperimentChart({
 
   const ChartComponent = lineStyle === 'area' ? ComposedChart : LineChart;
 
+  const exportToPng = useCallback(async () => {
+    if (!chartRef.current) return;
+
+    const element = chartRef.current;
+
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+
+    const canvas = await html2canvas(element, {
+      backgroundColor: null,
+      scale: 2,
+      useCORS: true,
+    });
+
+    const dataURL = canvas.toDataURL('image/png');
+
+    const link = document.createElement('a');
+    link.href = dataURL;
+    link.download = 'experiment-chart.png';
+    link.click();
+  }, []);
+
+  useEffect(() => {
+    if (onRegisterExport) {
+      onRegisterExport(exportToPng);
+    }
+  }, [onRegisterExport, exportToPng]);
+
   return (
-    <div className={styles.chartContainer}>
+    <div ref={chartRef} className={styles.chartContainer}>
       <ResponsiveContainer width="100%" height={320}>
         <ChartComponent data={zoomedData} margin={{ left: 0, right: 0, top: 20, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke={themeColors.gridColor} vertical horizontal />

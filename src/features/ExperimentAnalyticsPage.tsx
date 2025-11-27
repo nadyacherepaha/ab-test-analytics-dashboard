@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import styles from './ExperimentAnalyticsPage.module.css';
 import { ExperimentChart } from './ExperimentChart';
 import { VariationsSelector } from './VariationsSelector';
@@ -8,6 +8,7 @@ import { ZoomControls } from './ZoomControls';
 import { useExperimentData } from './useExperimentData';
 import { SunIcon } from '../shared/icons/SunIcon';
 import { MoonIcon } from '../shared/icons/MoonIcon';
+import { ExportIcon } from '../shared/icons/ExportIcon';
 
 export function ExperimentAnalyticsPage() {
   const { data, loading, error } = useExperimentData();
@@ -27,6 +28,7 @@ export function ExperimentAnalyticsPage() {
   const [resetZoomCounter, setResetZoomCounter] = useState(0);
   const [zoomFactor, setZoomFactor] = useState<number>(1.0);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const chartExportRef = useRef<null | (() => void)>(null);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -42,6 +44,12 @@ export function ExperimentAnalyticsPage() {
 
   const handleZoomOut = () => {
     setZoomFactor((prev) => Math.min(1.0, prev / 0.7));
+  };
+
+  const handleExport = () => {
+    if (chartExportRef.current) {
+      chartExportRef.current();
+    }
   };
 
   useEffect(() => {
@@ -88,6 +96,15 @@ export function ExperimentAnalyticsPage() {
               <div className={styles.modeAndStyle}>
                 <LineStyleSelector value={lineStyle} onChange={setLineStyle} />
 
+                <button
+                  type="button"
+                  className={styles.exportButton}
+                  onClick={handleExport}
+                  aria-label="Export PNG"
+                >
+                  <ExportIcon />
+                </button>
+
                 <ZoomControls
                   onZoomIn={handleZoomIn}
                   onZoomOut={handleZoomOut}
@@ -124,6 +141,7 @@ export function ExperimentAnalyticsPage() {
             mode={mode}
             lineStyle={lineStyle}
             zoomFactor={zoomFactor}
+            onRegisterExport={(fn) => (chartExportRef.current = fn)}
           />
         </>
       )}
