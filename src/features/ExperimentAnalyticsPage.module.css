@@ -89,7 +89,6 @@
   background: var(--selector-bg-color);
   color: var(--selector-text-color);
   cursor: pointer;
-  transition: background-color 0.2s;
 }
 
 .exportButton:hover {
