@@ -13,11 +13,10 @@ export function useExperimentData(): UseExperimentDataResult {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let isSubscribed = true;
-
     const fetchData = async () => {
       try {
-        const response = await fetch('/data/data.json');
+        const dataUrl = `${import.meta.env.BASE_URL}data/data.json`;
+        const response = await fetch(dataUrl);
 
         if (!response.ok) {
           throw new Error(`Request failed with status ${response.status}`);
@@ -25,28 +24,16 @@ export function useExperimentData(): UseExperimentDataResult {
 
         const payload = (await response.json()) as ExperimentData;
 
-        if (isSubscribed) {
-          setData(payload);
-        }
+        setData(payload);
       } catch (err) {
-        if (!isSubscribed) {
-          return;
-        }
-
         const message = err instanceof Error ? err.message : 'Unknown error';
         setError(message);
       } finally {
-        if (isSubscribed) {
           setLoading(false);
-        }
       }
     };
 
     fetchData();
-
-    return () => {
-      isSubscribed = false;
-    };
   }, []);
 
   return { data, loading, error };
