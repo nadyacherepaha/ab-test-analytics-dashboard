@@ -3,6 +3,7 @@ import styles from './ExperimentAnalyticsPage.module.css';
 import { ExperimentChart } from './ExperimentChart';
 import { VariationsSelector } from './VariationsSelector';
 import { ModeSelector } from './ModeSelector';
+import { LineStyleSelector } from './LineStyleSelector';
 import { useExperimentData } from './useExperimentData';
 
 export function ExperimentAnalyticsPage() {
@@ -19,6 +20,7 @@ export function ExperimentAnalyticsPage() {
 
   const [activeVariationKeys, setActiveVariationKeys] = useState<string[]>([]);
   const [mode, setMode] = useState<'day' | 'week'>('day');
+  const [lineStyle, setLineStyle] = useState<'line' | 'smooth' | 'area'>('smooth');
 
   useEffect(() => {
     if (normalizedVariations.length > 0) {
@@ -59,6 +61,8 @@ export function ExperimentAnalyticsPage() {
 
               <ModeSelector mode={mode} onModeChange={setMode} />
             </div>
+
+            <LineStyleSelector value={lineStyle} onChange={setLineStyle} />
           </div>
 
           <ExperimentChart
@@ -66,6 +70,7 @@ export function ExperimentAnalyticsPage() {
             normalizedVariations={normalizedVariations}
             activeVariationKeys={activeVariationKeys}
             mode={mode}
+            lineStyle={lineStyle}
           />
         </>
       )}

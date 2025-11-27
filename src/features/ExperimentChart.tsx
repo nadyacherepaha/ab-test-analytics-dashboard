@@ -1,6 +1,8 @@
 import { useMemo, type FC } from 'react';
 import {
+  Area,
   CartesianGrid,
+  ComposedChart,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -24,6 +26,7 @@ type ExperimentChartProps = {
   normalizedVariations: NormalizedVariation[];
   activeVariationKeys: string[];
   mode: 'day' | 'week';
+  lineStyle: 'line' | 'smooth' | 'area';
 };
 
 type ChartPoint = {
@@ -139,6 +142,7 @@ export function ExperimentChart({
   normalizedVariations,
   activeVariationKeys,
   mode,
+  lineStyle,
 }: ExperimentChartProps) {
   const chartData = useMemo<ChartPoint[]>(() => {
     if (mode === 'day') {
@@ -372,10 +376,12 @@ export function ExperimentChart({
     [normalizedVariations]
   );
 
+  const ChartComponent = lineStyle === 'area' ? ComposedChart : LineChart;
+
   return (
     <div className={styles.chartContainer}>
       <ResponsiveContainer width="100%" height={320}>
-        <LineChart data={filteredChartData} margin={{ left: 0, right: 0, top: 20 }}>
+        <ChartComponent data={filteredChartData} margin={{ left: 0, right: 0, top: 20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e1dfe7" vertical horizontal />
 
           <XAxis
@@ -411,10 +417,25 @@ export function ExperimentChart({
               const color = config?.color ?? baseConfig?.color ?? '#000';
               const name = variation.name;
 
+              if (lineStyle === 'area') {
+                return (
+                  <Area
+                    key={variation.key}
+                    type="monotone"
+                    dataKey={variation.key}
+                    stroke={color}
+                    fill={color + '66'}
+                    strokeWidth={2}
+                    dot={false}
+                    name={name}
+                  />
+                );
+              }
+
               return (
                 <Line
                   key={variation.key}
-                  type="monotone"
+                  type={lineStyle === 'smooth' ? 'monotone' : 'linear'}
                   dataKey={variation.key}
                   stroke={color}
                   strokeWidth={2}
@@ -423,7 +444,7 @@ export function ExperimentChart({
                 />
               );
             })}
-        </LineChart>
+        </ChartComponent>
       </ResponsiveContainer>
     </div>
   );
