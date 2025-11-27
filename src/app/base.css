@@ -1,4 +1,4 @@
-:global(body) {
+body {
   margin: 0;
   font-family:
     'Roboto',
@@ -8,4 +8,5 @@
     'Segoe UI',
     sans-serif;
   background-color: #fff;
+  box-sizing: border-box;
 }
